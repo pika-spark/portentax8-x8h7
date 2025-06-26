@@ -1,3 +1,4 @@
+obj-m += x8h7_reset.o
 obj-m += x8h7_drv.o
 obj-m += x8h7_adc.o
 obj-m += x8h7_gpio.o
@@ -7,6 +8,7 @@ obj-m += x8h7_can.o
 obj-m += x8h7_uart.o
 obj-m += x8h7_ui.o
 obj-m += x8h7_h7.o
+
 
 SRC := $(shell pwd)
 
