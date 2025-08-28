@@ -11,7 +11,8 @@
 #include <linux/list.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
-#include <linux/version.h> 
+#include <linux/version.h>
+#include <linux/delay.h>
 #include "x8h7.h"
 #include "x8h7_ioctl.h"
 
@@ -386,9 +387,31 @@ static ssize_t sysfs_show_chip_uid(struct kobject *kobj,
   return x8h7_read_chip_uid(buf, PAGE_SIZE);
 }
 
+static int x8h7module_ready = 0;
+
+static ssize_t x8h7_set_up(struct kobject *kobj,
+                           struct kobj_attribute *attr, char *buf) {
+    if (x8h7module_ready == 1) {
+        return sprintf(buf, "ready\n");
+    } else {
+        return sprintf(buf, "initializing\n");
+    }
+}
 struct kobject *kobj_ref_x8h7_firmware_version;
 struct kobj_attribute x8h7_firmware_version_attr = __ATTR(version, 0444, sysfs_show_version, NULL);
 struct kobj_attribute x8h7_chip_uid_attr = __ATTR(chip_uid, 0444, sysfs_show_chip_uid, NULL);
+struct kobj_attribute x8h7_set_up_attr = __ATTR(set_up, 0444, x8h7_set_up, NULL);
+
+static struct attribute *attrs[] = {
+      &x8h7_firmware_version_attr.attr,
+      &x8h7_set_up_attr.attr,
+      NULL, // Array must be NULL-terminated
+};
+
+  // // Create the attribute group.
+static struct attribute_group attr_group = {
+  .attrs = attrs,
+};
 
  struct file_operations fops = {
   .open           = x8h7_h7_open,
@@ -475,13 +498,13 @@ static int x8h7_h7_probe(struct platform_device *pdev)
     return -ENOMEM; // Example: return if kobject creation fails
   }
 
-  if (sysfs_create_file(kobj_ref_x8h7_firmware_version, &x8h7_firmware_version_attr.attr)) {
+  if (sysfs_create_group(kobj_ref_x8h7_firmware_version, &attr_group)) {
     DBG_ERROR("Cannot create 'x8h7_firmware' sysfs file\n");
     // You should also clean up the kobject if file creation fails
     kobject_put(kobj_ref_x8h7_firmware_version); // Clean up the kobject
     return -EINVAL; // Example: return an error
   }
-
+  x8h7module_ready = 1;
   return 0;
 }
 
