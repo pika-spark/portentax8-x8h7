@@ -1,4 +1,3 @@
-obj-m += x8h7_reset.o
 obj-m += x8h7_drv.o
 obj-m += x8h7_adc.o
 obj-m += x8h7_gpio.o
